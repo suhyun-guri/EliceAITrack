@@ -10,6 +10,7 @@ view는 우리 눈에 보이는 부분을 관리합니다.
 추가로, 코드를 보다보면 query를 사용한 것이 많은데, 이를 활용하면 SQL 구문을 직접 사용하지 않고
 ORM을 통해 간접적으로 db에 작업 명령을 내릴 수 있습니다.
 '''
+from re import I
 from flask import Blueprint, render_template, request, url_for, session, redirect
 from models.models import *
 #폴더 이름.파일이름 models.models
@@ -42,3 +43,27 @@ def register():
         else:
             #오류 반환
             return "이미 가입된 아이디입니다...!"
+
+@bp.route('/login', methods=('GET','POST'))
+def login():
+    if request.method == 'GET':
+        return render_template('login.html')
+    elif request.method == 'POST':
+        id          = request.form['user_id']
+        password    = request.form['password']
+        user_data = rabbitUser.query.filter_by(id=id).first()
+        
+        if not user_data:
+            return '없는 아이디입니다.'
+        elif password != user_data.password:
+            return '비밀번호가 틀렸습니다.'
+        else:
+            session.clear()
+            session['user_id'] = id
+            session['nickname'] = user_data.nickname
+
+            return '로그인 성공 ! 😎😎'
+@bp.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('main.home'))
